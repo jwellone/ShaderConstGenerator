@@ -71,13 +71,13 @@ namespace jwelloneEditor
                 var count = ShaderUtil.GetPropertyCount(shader);
                 for (var i = 0; i < count; ++i)
                 {
-                    var shader_attribs = shader.GetPropertyAttributes(i);
-                    if (shader_attribs.Length == 0)
+                    var attribs = shader.GetPropertyAttributes(i);
+                    if (attribs.Length == 0)
                     {
                         continue;
                     }
 
-                    foreach (var attribute in shader_attribs)
+                    foreach (var attribute in attribs)
                     {
                         if (attribute.IndexOf("Toggle(") != 0)
                         {
