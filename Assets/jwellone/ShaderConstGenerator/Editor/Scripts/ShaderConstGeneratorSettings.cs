@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using UnityEngine;
 using UnityEditor;
 
@@ -13,6 +14,8 @@ namespace jwelloneEditor
 
         [SerializeField] bool _isRunWithImportShader = true;
         [SerializeField] string _assetPath = $"Scripts/Const";
+        [SerializeField] List<string> _targetFolders = new List<string>(new[] { "Assets" });
+        [SerializeField] List<Shader> _ignoreShaders = null!;
 
         static ShaderConstGeneratorSettings? _cacheInstance;
 
@@ -53,35 +56,45 @@ namespace jwelloneEditor
                     return;
                 }
 
-                foreach (var asset in importedAssets)
+                var targetFolders = _instance._targetFolders;
+                if (CheckGenerateOrUpdate(targetFolders, importedAssets) || CheckGenerateOrUpdate(targetFolders, deletedAssets))
                 {
-                    if (Path.GetExtension(asset) == ".shader")
+                    GenerateOrUpdate();
+                }
+            }
+
+            static bool CheckGenerateOrUpdate(IList<string> targetFolders, string[] assetPaths)
+            {
+                foreach (var asset in assetPaths)
+                {
+                    if (targetFolders.Any(x => asset.StartsWith(x)))
                     {
-                        GenerateOrUpdate();
-                        return;
+                        if (Path.GetExtension(asset) == ".shader")
+                        {
+                            return true;
+                        }
                     }
                 }
 
-                foreach (var asset in deletedAssets)
-                {
-                    if (Path.GetExtension(asset) == ".shader")
-                    {
-                        GenerateOrUpdate();
-                        return;
-                    }
-                }
+                return false;
             }
         }
 
         [MenuItem("Tools/jwellone/Generate ShaderConst.cs")]
         static void GenerateOrUpdate()
         {
-            Debug.Log($"### GenerateOrUpdate");
             var list = new List<Shader>();
             var infos = ShaderUtil.GetAllShaderInfo();
-            foreach (var n in infos)
+            var targetFolders = _instance._targetFolders;
+            var ignores = _instance._ignoreShaders;
+            foreach (var info in infos)
             {
-                list.Add(Shader.Find(n.name));
+                var shader = Shader.Find(info.name);
+                var assetPath = AssetDatabase.GetAssetPath(shader);
+                if (!ignores.Any(x => x.name == shader.name) && targetFolders.Any(x => assetPath.StartsWith(x)))
+                {
+                    list.Add(shader);
+                }
             }
 
             var path = Path.Combine(Application.dataPath, _instance._assetPath);
@@ -89,6 +102,7 @@ namespace jwelloneEditor
             {
                 Directory.CreateDirectory(path);
             }
+
             var fullPath = Path.Combine(path, _fileName);
             ShaderConstGenerator.Save(fullPath, list.ToArray());
             AssetDatabase.ImportAsset(fullPath.Replace(Application.dataPath, "Assets"), ImportAssetOptions.ForceUpdate);
