@@ -44,9 +44,9 @@ namespace jwelloneEditor
             File.WriteAllText(path, sb.ToString());
         }
 
-        static HashSet<string> GetProperties(Shader[] shaders)
+        static SortedSet<string> GetProperties(Shader[] shaders)
         {
-            var properties = new HashSet<string>();
+            var properties = new SortedSet<string>();
             foreach (var shader in shaders)
             {
                 var count = ShaderUtil.GetPropertyCount(shader);
@@ -63,9 +63,9 @@ namespace jwelloneEditor
             return properties;
         }
 
-        static HashSet<string> GetKeywords(Shader[] shaders)
+        static SortedSet<string> GetKeywords(Shader[] shaders)
         {
-            var keywords = new HashSet<string>();
+            var keywords = new SortedSet<string>();
             foreach (var shader in shaders)
             {
                 var count = ShaderUtil.GetPropertyCount(shader);
